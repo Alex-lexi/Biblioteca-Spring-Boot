@@ -35,7 +35,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarios); // Retorna a lista de usuários
     }
 
-    // Busca o usuário pelo id
+    // Busca o usuário pelo Id
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
         Usuario usuario = this.UsuarioRepository.findById(id).orElse(null);
