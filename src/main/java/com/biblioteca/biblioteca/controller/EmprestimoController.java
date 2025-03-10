@@ -47,10 +47,10 @@ public class EmprestimoController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Livro não está disponível para empréstimo.");
         }
 
-        Emprestimo emprestimo = new Emprestimo(usuario, livro, LocalDate.now(), null);
+        Emprestimo emprestimo = new Emprestimo(usuario, livro, LocalDate.now(), dados.dataDevolucao());
         emprestimoRepository.save(emprestimo);
         
-        // Atualiza a disponibilidade do livro
+       
         livro.setDisponivel(false);
         livroRepository.save(livro);
         
@@ -89,7 +89,7 @@ public class EmprestimoController {
         emprestimo.setDataDevolucao(LocalDate.now());
         emprestimoRepository.save(emprestimo);
 
-        // Atualiza a disponibilidade do livro
+        
         Livro livro = emprestimo.getLivro();
         livro.setDisponivel(true);
         livroRepository.save(livro);
@@ -125,6 +125,7 @@ public class EmprestimoController {
         // Atualiza os dados do empréstimo
         Usuario usuario = usuarioRepository.findById(dados.usuarioId()).orElse(null);
         Livro livro = livroRepository.findById(dados.livroId()).orElse(null);
+        
 
         if (usuario == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
@@ -136,6 +137,7 @@ public class EmprestimoController {
 
         emprestimo.setUsuario(usuario);
         emprestimo.setLivro(livro);
+        emprestimo.setDataDevolucao(dados.dataDevolucao());
         emprestimoRepository.save(emprestimo);
 
         return ResponseEntity.ok("Empréstimo atualizado com sucesso!");

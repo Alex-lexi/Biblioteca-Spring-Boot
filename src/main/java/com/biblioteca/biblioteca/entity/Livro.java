@@ -10,11 +10,12 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Livro {
+    // Define o campo id como a chave primária
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Gera o valor do id automaticamente
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false) // Define que a coluna não pode ser nula
     private String titulo;
 
     @Column(nullable = false)
@@ -29,10 +30,12 @@ public class Livro {
     @Column(nullable = false)
     private boolean disponivel;
 
+    // Construtor vazio
     public Livro() {
 
     }
 
+    // Construtor que recebe todos os atributos
     public Livro(Long id, String titulo, String autor, String editora, int ano, boolean disponivel) {
         this.id = id;
         this.titulo = titulo;
@@ -42,6 +45,7 @@ public class Livro {
         this.disponivel = disponivel;
     }
 
+    // Construtor para o dto
     public Livro(LivroDto livroDto) {
         this.titulo = livroDto.titulo();
         this.autor = livroDto.autor();
