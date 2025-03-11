@@ -17,8 +17,8 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 
-@RestController
-@RequestMapping("/emprestimos")
+@RestController // Indica que esta classe é um controlador
+@RequestMapping("/emprestimos") // Define a URL para os métodos deste controlador
 public class EmprestimoController {
 
     @Autowired
@@ -31,6 +31,7 @@ public class EmprestimoController {
     private LivroRepository livroRepository;
 
     @PostMapping
+    // Recebe um objeto EmprestimoDto e valida os dados
     public ResponseEntity<String> inserirEmprestimo(@RequestBody @Valid EmprestimoDto dados) {
         Usuario usuario = usuarioRepository.findById(dados.usuarioId()).orElse(null);
         Livro livro = livroRepository.findById(dados.livroId()).orElse(null);
@@ -38,7 +39,7 @@ public class EmprestimoController {
         if (usuario == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
         }
-        
+
         if (livro == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Livro não encontrado.");
         }
@@ -47,13 +48,20 @@ public class EmprestimoController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Livro não está disponível para empréstimo.");
         }
 
+        LocalDate dataAtual = LocalDate.now();
+        if (dados.dataDevolucao().isBefore(dataAtual)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("A data de devolução não pode ser anterior à data atual.");
+        }
+        // Cria um novo objeto Emprestimo com os dados fornecidos
+
         Emprestimo emprestimo = new Emprestimo(usuario, livro, LocalDate.now(), dados.dataDevolucao());
+        // Salva o novo empréstimo no repositório
         emprestimoRepository.save(emprestimo);
-        
-       
+
         livro.setDisponivel(false);
         livroRepository.save(livro);
-        
+
         return ResponseEntity.ok("Empréstimo realizado com sucesso!");
     }
 
@@ -68,7 +76,9 @@ public class EmprestimoController {
 
     @GetMapping
     public ResponseEntity<List<Emprestimo>> listarTodosEmprestimos() {
+        // Busca todos os empréstimos no repositório
         List<Emprestimo> emprestimos = emprestimoRepository.findAll();
+
         return ResponseEntity.ok(emprestimos);
     }
 
@@ -79,21 +89,23 @@ public class EmprestimoController {
     }
 
     @PutMapping("/{id}/devolucao")
+    // Recebe o ID do empréstimo como parâmetro
     public ResponseEntity<String> atualizarDataDevolucao(@PathVariable Long id) {
+
         Emprestimo emprestimo = emprestimoRepository.findById(id).orElse(null);
 
         if (emprestimo == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Empréstimo não encontrado.");
         }
-
+        // Atualiza a data de devolução para a data atual
         emprestimo.setDataDevolucao(LocalDate.now());
+
         emprestimoRepository.save(emprestimo);
 
-        
         Livro livro = emprestimo.getLivro();
         livro.setDisponivel(true);
         livroRepository.save(livro);
-        
+
         return ResponseEntity.ok("Devolução registrada com sucesso!");
     }
 
@@ -125,7 +137,6 @@ public class EmprestimoController {
         // Atualiza os dados do empréstimo
         Usuario usuario = usuarioRepository.findById(dados.usuarioId()).orElse(null);
         Livro livro = livroRepository.findById(dados.livroId()).orElse(null);
-        
 
         if (usuario == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
@@ -134,7 +145,11 @@ public class EmprestimoController {
         if (livro == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Livro não encontrado.");
         }
-
+        LocalDate dataAtual = LocalDate.now();
+        if (dados.dataDevolucao().isBefore(dataAtual)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("A data de devolução não pode ser anterior à data atual.");
+        }
         emprestimo.setUsuario(usuario);
         emprestimo.setLivro(livro);
         emprestimo.setDataDevolucao(dados.dataDevolucao());
