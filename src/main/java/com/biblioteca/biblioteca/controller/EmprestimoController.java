@@ -3,8 +3,10 @@ package com.biblioteca.biblioteca.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 
+import com.biblioteca.biblioteca.DTO.EmailDto;
 import com.biblioteca.biblioteca.DTO.EmprestimoDto;
 import com.biblioteca.biblioteca.entity.Emprestimo;
 import com.biblioteca.biblioteca.entity.Livro;
@@ -12,6 +14,7 @@ import com.biblioteca.biblioteca.entity.Usuario;
 import com.biblioteca.biblioteca.repository.EmprestimoRepository;
 import com.biblioteca.biblioteca.repository.LivroRepository;
 import com.biblioteca.biblioteca.repository.UsuarioRepository;
+import com.biblioteca.biblioteca.service.EmailService;
 
 import jakarta.validation.Valid;
 import java.time.LocalDate;
@@ -29,6 +32,9 @@ public class EmprestimoController {
 
     @Autowired
     private LivroRepository livroRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping
     // Recebe um objeto EmprestimoDto e valida os dados
@@ -58,6 +64,20 @@ public class EmprestimoController {
         Emprestimo emprestimo = new Emprestimo(usuario, livro, LocalDate.now(), dados.dataDevolucao());
         // Salva o novo empréstimo no repositório
         emprestimoRepository.save(emprestimo);
+
+        try {
+            String para = usuario.getEmail();
+            String assunto = "Novo empréstimo realizado";
+            String mensagem = " Empréstimo do livro " + livro.getTitulo() +" realizado com sucesso";
+
+            EmailDto email = new EmailDto(para, assunto, mensagem);
+            emailService.sendEmail(email);
+        } catch (Exception error) {
+            System.out.println(error);
+        }
+
+    
+
 
         livro.setDisponivel(false);
         livroRepository.save(livro);
@@ -92,11 +112,13 @@ public class EmprestimoController {
     // Recebe o ID do empréstimo como parâmetro
     public ResponseEntity<String> atualizarDataDevolucao(@PathVariable Long id) {
 
+
         Emprestimo emprestimo = emprestimoRepository.findById(id).orElse(null);
 
         if (emprestimo == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Empréstimo não encontrado.");
         }
+
         // Atualiza a data de devolução para a data atual
         emprestimo.setDataDevolucao(LocalDate.now());
 
@@ -105,6 +127,18 @@ public class EmprestimoController {
         Livro livro = emprestimo.getLivro();
         livro.setDisponivel(true);
         livroRepository.save(livro);
+
+
+        try {
+            String para = emprestimo.getUsuario().getEmail();
+            String assunto = "Devolução";
+            String mensagem = " Devolução do livro " + livro.getTitulo() +" realizada com sucesso";
+
+            EmailDto email = new EmailDto(para, assunto, mensagem);
+            emailService.sendEmail(email);
+        } catch (Exception error) {
+            System.out.println(error);
+        }
 
         return ResponseEntity.ok("Devolução registrada com sucesso!");
     }
